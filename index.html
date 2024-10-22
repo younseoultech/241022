@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎆클릭불꽃축제🎆</title>
+    <style>
+        @font-face {
+            font-family: 'ChosunGs';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/ChosunGs.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            font-family: 'Pretendard-Regular', sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        h1 {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: black;
+            font-size: 64px;
+            margin: 0;
+            text-shadow: 0 0 30px #39FF14, 0 0 60px #39FF14;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="color"], input[type="text"] {
+            padding: 10px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.8);
+            height: 50px;
+        }
+
+        input[type="color"] {
+            width: 50px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        input[type="text"] {
+            width: 250px;
+            background: black;
+            color: #39FF14;
+            border: 1px solid #39FF14;
+            text-align: center;
+        }
+
+        .boom-text {
+            position: absolute;
+            font-family: 'ChosunGs', sans-serif;
+            font-size: 60px;
+            font-weight: bold;
+            transform: translate(-50%, -50%) scale(1);
+            animation: explode 1s ease-out forwards;
+            pointer-events: none;
+            text-shadow: 0 0 30px, 0 0 80px;
+            z-index: 2;
+        }
+
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(2.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎆클릭불꽃축제🎆</h1>
+    <canvas id="fireworksCanvas"></canvas>
+
+    <div class="controls">
+        <input type="text" id="textInput" placeholder="터트리고 싶은 것을 적어보세요">
+        <input type="color" id="colorPicker" value="#39FF14">
+    </div>
+
+    <script>
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById('colorPicker');
+        const textInput = document.getElementById('textInput');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = (Math.random() - 0.5) * 20;
+                this.speedY = (Math.random() - 0.5) * 20;
+                this.color = color;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.opacity -= 0.02;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles(x, y) {
+            const hexColor = colorPicker.value;
+            const rgbColor = hexToRgb(hexColor);
+            const color = `${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}`;
+
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function hexToRgb(hex) {
+            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function showBoomText(x, y) {
+            const boomText = document.createElement('div');
+            boomText.className = 'boom-text';
+            const inputText = textInput.value.trim() || '펑';
+            boomText.textContent = `${inputText}!`;
+
+            const color = colorPicker.value;
+            boomText.style.color = color;
+            boomText.style.textShadow = `0 0 30px ${color}, 0 0 80px ${color}`;
+
+            boomText.style.left = `${x}px`;
+            boomText.style.top = `${y}px`;
+            document.body.appendChild(boomText);
+
+            setTimeout(() => {
+                boomText.remove();
+            }, 1000);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(particle => particle.opacity > 0);
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            showBoomText(e.clientX, e.clientY);
+            createParticles(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+</body>
+</html>
